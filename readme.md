@@ -2,8 +2,8 @@
 
 Python Modules:
 
-    speech_recognition
+    speech_recognition, winsound, gtts
 
-    winsound
+Programs: 
 
-    gtts
+    ffmpeg
