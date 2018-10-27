@@ -1,40 +1,51 @@
 import speech_recognition as sr
 import winsound
 from config import *
+from enum import Enum
 from gtts import gTTS
 import os
 
-
+class VoiceAction():
+    def __init__(self, string_matcher, function, arg_pos=-1, about_text=''):
+        self.string_matcher = string_matcher
+        self.function = function
+        self.arg_pos = arg_pos
+        self.about_text = about_text
 
 class VoiceController():
     def __init__(self, actions, speaker, key_phrase=''):
         self.actions = actions
+        self.actions.append(("what can you do", self.about_text, "ABOUT TEXT"))
         self.speaker = speaker
-        self.key_phrase = key_phrase.lower()
+        #self.key_phrase = key_phrase.lower()
+        self.key_phrases = key_phrase
 
         self.actions.sort(key=lambda x: x[0])
 
-        self.r = sr.Recognizer()
+        self.voice_recogniser = sr.Recognizer()
 
 
         #Parts below can be removed and the voicecontroller will still work.
         #These are just an attempt at making the mic work better
-        self.r.dynamic_energy_threshold = False # Attempt to stop hanging.
+        self.voice_recogniser.dynamic_energy_threshold = False # Attempt to stop hanging.
+        self.energy_threshold = 400 
+
         m = sr.Microphone()
         with m as source:
-            self.r.adjust_for_ambient_noise(source) # we only need to calibrate once, before we start listening
+            self.voice_recogniser.adjust_for_ambient_noise(source) # we only need to calibrate once, before we start listening
         
 
 
-    def about_text(self):
+    def about_text(self, args="ignore"):
         """
         Generator: yields about text for the current VoiceController
         """
-        if self.key_phrase:
-            yield "Key Phrase: {}".format(key_phrase)
-            yield ""
+        if self.key_phrases:
+            print("Key Phrase: {}".format(self.key_phrases))
+            print("")
         for action_tuple in self.actions:
-            yield "\t{:25}:\t{}".format('"{}"'.format(action_tuple[0]), action_tuple[2])
+            print("\t{:25}:\t{}".format('"{}"'.format(action_tuple[0]), action_tuple[2]))
+        return "Here's a list of the things I can do"
 
     def listen(self):
         """
@@ -42,10 +53,11 @@ class VoiceController():
         """
         with sr.Microphone() as source:
             print("Listening...")
-            audio = self.r.listen(source)
+            audio = self.voice_recogniser.listen(source)
+            print("Recognising...")
         
         try:
-            audio_input = self.r.recognize_google(audio)
+            audio_input = self.voice_recogniser.recognize_google(audio)
             print("Heard: \"{}\"".format(audio_input))
             return audio_input.lower()
     
@@ -78,20 +90,95 @@ class VoiceController():
         'actions' if one is found.
         """
         voice_input = self.listen()
-        if (voice_input and self.key_phrase in voice_input):
-            self.speaker.play_track('WAKE')
-            voice_input = self.listen()
-            #command = voice_input.replace(self.key_phrase, '').strip() #remove key phrase from input phrase to give only command
-            response = self.parse_speech(voice_input)
-            if response:
-                print('\tA: {}'.format(response))
-                self.speaker.text_to_speech(response)
-            else:
-                self.speaker.play_track("NOT_RECOGNISED")
-            return response
+        #if (voice_input and self.key_phrase in voice_input and (len(voice_input) == len(key_phrase))):
+        if voice_input:
+            if (self.contains_key_phrase(voice_input) and (len(voice_input) == len(self.contains_key_phrase(voice_input)))):
+                # When phrase only contains the key phrase
+                self.speaker.play_track('WAKE')
+                voice_input = self.listen()
+                response = self.parse_speech(voice_input)
+                if response:
+                    #print('\tA: {}'.format(response))
+                    self.speaker.text_to_speech(response)
+                else:
+                    self.speaker.play_track("NOT_RECOGNISED")
+                return response
 
-class SpeechSpeaker():
-    def __init__(self, tracks=False, ffmpeg_path='.'):
+            elif (self.contains_action(voice_input) and self.contains_key_phrase(voice_input)):
+                # When phrase contains key phrase and a valid action
+                found_action = self.contains_action(voice_input)
+                found_kp = self.contains_key_phrase(voice_input)
+                response = self.parse_speech(voice_input.replace(found_kp, '').strip())
+                if response:
+                    print('\tA: {}'.format(response))
+                    self.speaker.text_to_speech(response)
+                else:
+                    self.speaker.play_track("NOT_RECOGNISED")
+                return response
+
+            else:
+                return False
+        else:
+            #No voice input detected
+            return False
+
+    def contains_key_phrase(self, check_phrase):
+        """ Checks if there is a key phrase in a check phrase and returns the key phrase if found. """
+        for key in self.key_phrases:
+            if key in check_phrase:
+                return key
+        return False
+
+    def contains_action(self, check_phrase):
+        """ Checks if there is an action in a check phrase and returns the action if found. """
+        for action in self.actions:
+            if action[0] in check_phrase:
+                return action
+        return False
+
+#region Speakers
+
+class SpeakerType(Enum):
+    MUTE = 0
+    BEEP = 1
+    SPEECH = 2
+
+
+class Speaker():
+    """
+    Base class for speaker output.
+    """
+    def __init__(self, args):
+        pass
+    
+    def text_to_speech(self, text):
+        #Play a specific line of text
+        raise NotImplementedError
+    
+    def play_file(self, filepath):
+        #Play a sound file
+        raise NotImplementedError
+    
+    def play_track(self, trackname):
+        #Play a given track by it's name
+        raise NotImplementedError
+
+    def make_speaker(speaker_type, speech_tracks=False, ffmpeg_path='.'):
+        if speaker_type == SpeakerType.MUTE:
+            return MuteSpeaker()
+        elif speaker_type == SpeakerType.BEEP:
+            return BeepSpeaker()
+        elif speaker_type == SpeakerType.SPEECH:
+            return SpeechSpeaker(speech_tracks, ffmpeg_path)
+        else:
+            print("Invalid speaker type given: {0}".format(speaker_type))
+            print("Speaker must be one of:")
+            for v in SpeakerType:
+                print("    {0}".format(v))
+            return False
+
+class SpeechSpeaker(Speaker):
+    def __init__(self, tracks={}, ffmpeg_path='.'):
         self.tracks = tracks
 
     def text_to_speech(self, text):
@@ -108,9 +195,9 @@ class SpeechSpeaker():
     def play_track(self, trackname):
         winsound.PlaySound(self.tracks[trackname], winsound.SND_FILENAME)
 
-class BeepSpeaker():
-    def __init__(self, tracks=False):
-        self.tracks = tracks
+class BeepSpeaker(Speaker):
+    def __init__(self, args="ignore"):
+        pass
 
     def text_to_speech(self, text):
         winsound.Beep(600,200)
@@ -124,7 +211,7 @@ class BeepSpeaker():
         winsound.Beep(600,200)
         winsound.Beep(600,200)
 
-class MuteSpeaker():
+class MuteSpeaker(Speaker):
     def __init__(self, args="ignore"):
         pass
 
@@ -137,12 +224,4 @@ class MuteSpeaker():
     def play_track(self, args="ignore"):
         pass
 
-def speaker_factory(speaker_type, speech_tracks=False, ffmpeg_path='.'):
-    if speaker_type == 0:
-        return MuteSpeaker()
-    elif speaker_type == 1:
-        return BeepSpeaker()
-    elif speaker_type == 2:
-        return SpeechSpeaker(speech_tracks, ffmpeg_path)
-    else:
-        return False
+#endregion
