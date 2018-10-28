@@ -1,0 +1,71 @@
+{
+    "speech_tracks": {
+        "WELCOME": "resources\\audio_clips\\welcome.wav",
+        "WAKE": "resources\\audio_clips\\how_can_i_help.wav",
+        "NOT_RECOGNISED": "resources\\audio_clips\\i_dont_understand.wav"
+    },
+    "ffmpeg_path": ".\\resources\\programs\\ffmpeg\\bin\\ffmpeg",
+    "audio_out_mode": 2,
+    "input_mode": 0,
+    "key_phrases": [
+        "assistant"
+    ],
+    "actions": [
+        {
+            "phrases": [
+                "play music on itunes"
+            ],
+            "function": "play_itunes_music",
+            "about_text": "Start playing music on iTunes"
+        },
+        {
+            "phrases": [
+                "google __search_term__",
+                "search for __search_term__"
+            ],
+            "function": "google_search",
+            "about_text": "Search Google for a given phrase"
+        },
+        {
+            "phrases": [
+                "play __search_term__",
+                "play __search_term__ on youtube"
+            ],
+            "function": "play_youtube_video",
+            "about_text": "Play a YouTube video",
+            "kwargs": {
+                "api_key": "YOUR_API_KEY_HERE"
+            }
+        },
+        {
+            "phrases": [
+                "set a timer for __time_period__",
+                "set a __time_period__ timer"
+            ],
+            "function": "set_timer",
+            "about_text": "Start a timer"
+        },
+        {
+            "phrases": [
+                "show me memes"
+            ],
+            "function": "launch_reddit_slideshow",
+            "about_text": "Launch a reddit slideshow of me_irl",
+            "kwargs": {
+                "subreddit": "me_irl"
+            }
+        }
+    ],
+    "action_template": {
+        "phrases": [
+            "do __something__",
+            "please do __something__ for me"
+        ],
+        "function": "do_something",
+        "about_text": "This lets you do something.",
+        "kwargs": {
+            "echo": false,
+            "name": "Me"
+        }
+    }
+}
