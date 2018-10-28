@@ -4,7 +4,7 @@ from enum import Enum
 from gtts import gTTS
 import os
 from VoiceAction import VoiceAction
-
+import re
 
 class VoiceController():
     def __init__(self, actions, speaker, input_device, key_phrases=''):
@@ -53,9 +53,9 @@ class VoiceController():
         """
         voice_input = self.input_device.take_input()
 
-        # if (voice_input and self.key_phrase in voice_input and (len(voice_input) == len(key_phrase))):
         if voice_input:
-            if (self.contains_key_phrase(voice_input) and (len(voice_input) == len(self.contains_key_phrase(voice_input)))):
+            if self.contains_key_phrase(voice_input):#(self.contains_key_phrase(voice_input) and (len(voice_input) == len(self.contains_key_phrase(voice_input)))):
+                
                 # When phrase only contains the key phrase, acknowledge and wait for further input
                 self.speaker.play_track('WAKE')
                 print("How can I help?")
@@ -89,16 +89,14 @@ class VoiceController():
 
     def contains_key_phrase(self, check_phrase):
         """ Checks if there is a key phrase in a check phrase and returns the key phrase if found. """
-        for key in self.key_phrases:
-            if key in check_phrase:
-                return key
+        for key_phrase in self.key_phrases:
+            if re.match(key_phrase, check_phrase):
+                return key_phrase
         return False
 
     def contains_action(self, phrase):
         """ Checks if there is an action in a check phrase and returns the action if found. """
         for action in self.actions:
-            # if action[0] in check_phrase:
-            #    return action
             if action.is_match(phrase):
                 return action
         return False
