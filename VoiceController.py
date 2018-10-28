@@ -237,6 +237,8 @@ class SpeechSpeaker(Speaker):
             os.system(
                 "{} -loglevel panic -i output_audio.mp3 -acodec pcm_u8 -ar 22050 output_audio.wav -y".format(self.ffmpeg_path))
             winsound.PlaySound('output_audio.wav', winsound.SND_FILENAME)
+            os.remove("output_audio.wav")
+            os.remove("output_audio.mp3")
         except AttributeError:
             # Issue with gTTs
             pass
