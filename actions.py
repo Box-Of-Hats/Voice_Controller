@@ -66,3 +66,36 @@ def set_timer(time_period):
     os.system(
         "start chrome \"https://www.google.co.uk/search?q={time_period} timer\"".format(time_period=time_period))
     return "setting timer for: {time_period}".format(time_period=time_period)
+
+def change_volume(amount):
+    """
+    Make a relative change to the current volume.
+    """
+    presses_required = int(abs(amount)/2)
+    if amount > 0:
+        for i in range(0, presses_required):
+            pyautogui.press("volumeup")
+    else:
+        for i in range(0, presses_required):
+            pyautogui.press("volumedown")
+    return "Changed volume by {amount}".format(amount=amount)
+
+def set_absolute_volume(level):
+    """
+    Set the volume to be an absolute value.
+    """
+    try:
+        level = int(level)
+    except:
+        return "The volume level should be a number"
+    #Completely mute audio first so we know the current volume
+    for i in range(0, 50):
+        pyautogui.press("volumedown")
+
+    #Cap volume to 100%
+    presses_required = min(int(abs(level)/2), 50)
+
+    for i in range(0, presses_required):
+        pyautogui.press("volumeup")
+
+    return "Set volume to {level}".format(level=level)

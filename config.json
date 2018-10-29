@@ -5,9 +5,9 @@
         "NOT_RECOGNISED": "resources\\audio_clips\\i_dont_understand.wav"
     },
     "ffmpeg_path": ".\\resources\\programs\\ffmpeg\\bin\\ffmpeg",
-    "audio_out_mode": 2,
-    "input_mode": 0,
-    "energy_threshold": 0,
+    "audio_out_mode": 0,
+    "input_mode": 1,
+    "energy_threshold": 450,
     "key_phrases": [
         "assistant"
     ],
@@ -18,6 +18,33 @@
             ],
             "function": "play_itunes_music",
             "about_text": "Start playing music on iTunes"
+        },
+        {
+            "phrases": [
+                ".*(up|volume){1} +.*(up|volume){1}"
+            ],
+            "function": "change_volume",
+            "about_text": "Increase volume by a set amount.",
+            "kwargs": {
+                "amount": 18
+            }
+        },
+        {
+            "phrases": [
+                ".*(down|volume){1} +.*(down|volume){1}"
+            ],
+            "function": "change_volume",
+            "about_text": "Decrease volume by a set amount.",
+            "kwargs": {
+                "amount": -18
+            }
+        },
+        {
+            "phrases": [
+                ".*(set|change|adjust) volume to __level__"
+            ],
+            "function": "set_absolute_volume",
+            "about_text": "Change volume to a chosen value."
         },
         {
             "phrases": [

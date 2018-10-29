@@ -60,14 +60,16 @@ class VoiceController():
                 self.speaker.play_track('WAKE')
                 print("How can I help?")
                 voice_input = self.input_device.take_input()
-                response = self.parse_speech(voice_input)
+                response = False
+                if self.contains_action(voice_input):
+                    response = self.parse_speech(voice_input)
                 if response:
                     #print('\tA: {}'.format(response))
                     self.speaker.text_to_speech(response)
                 else:
                     self.speaker.play_track("NOT_RECOGNISED")
                 return response
-
+            """
             elif (self.contains_action(voice_input) and self.contains_key_phrase(voice_input)):
                 # When phrase contains key phrase and a valid action, just perform the action
                 found_action = self.contains_action(voice_input)
@@ -83,6 +85,7 @@ class VoiceController():
 
             else:
                 return False
+                """
         else:
             # No voice input detected
             return False
@@ -98,6 +101,7 @@ class VoiceController():
         """ Checks if there is an action in a check phrase and returns the action if found. """
         for action in self.actions:
             if action.is_match(phrase):
+                print("matched: {0}".format(action.match_patterns))
                 return action
         return False
 

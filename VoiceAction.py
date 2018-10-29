@@ -37,6 +37,10 @@ class VoiceAction():
         >>> va.is_match("google best memes 2018")
         'google __search_phrase__'
 
+        >>> va = VoiceAction([".*(set|change|adjust) volume to __level__"], print)
+        >>> va.is_match("set volume to 50")
+        '.*(set|change|adjust) volume to __level__'
+
         """
         for match_pattern in self.match_patterns:
             phrase_args = re.findall("__[a-zA-Z0-9_]*__", match_pattern)
@@ -61,22 +65,32 @@ class VoiceAction():
         >>> va.get_values("search for pictures of cats on google", "search for __search_phrase__ on __search_engine__")
         {'search_phrase': 'pictures of cats', 'search_engine': 'google'}
 
+        >>> va = VoiceAction([".*(set|change|adjust) volume to __level__"], print)
+        >>> va.get_values("set volume to 50", ".*(set|change|adjust) volume to __level__")
+        {'level': '50'}
+
+
         """
         phrase_args = re.findall("__[a-zA-Z0-9_]*__", match_pattern)
         for pa in phrase_args:
-            match_pattern = match_pattern.replace(pa, "([ ,.a-zA-Z0-9]*)")
+            match_pattern = match_pattern.replace(pa, "([ ,.a-zA-Z0-9]+)")
+            #print("New match pattern: {0}".format(match_pattern))
+
+        #In case of there being more match groups found than expected, calculate offset
+        number_found_groups = match_pattern.count("(")
+        offset = number_found_groups-len(phrase_args)
 
         match_pattern = re.compile(match_pattern)
-        m = match_pattern.findall(phrase)
-
+        matching_groups = match_pattern.findall(phrase)
+        
         # If there is more than 1 match found, we need to take the first nested tuple
-        if isinstance(m[0], tuple):
-            m = m[0]
+        if isinstance(matching_groups[0], tuple):
+            matching_groups = matching_groups[0]
 
         results = {}
         for no, pa in enumerate(phrase_args):
             pa = pa.strip("_")
-            results[pa] = m[no]
+            results[pa] = matching_groups[no+offset]
 
         return results
 
