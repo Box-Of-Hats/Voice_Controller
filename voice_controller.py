@@ -29,6 +29,7 @@ def main():
             input_mode = loaded_config["input_mode"]
             ffmpeg_path = loaded_config["ffmpeg_path"]
             speech_tracks = loaded_config["speech_tracks"]
+            energy_threshold = loaded_config["energy_threshold"]
 
             for action in loaded_config["actions"]:
 
@@ -49,7 +50,7 @@ def main():
             config_file=config_file))
         exit()
 
-    input_device = InputDevice.make_device(input_mode)
+    input_device = InputDevice.make_device(input_mode, energy_threshold=energy_threshold)
     speaker = Speaker.make_speaker(
         audio_out_mode, speech_tracks, ffmpeg_path)
     if not speaker:

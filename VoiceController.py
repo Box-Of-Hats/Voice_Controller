@@ -90,7 +90,7 @@ class VoiceController():
     def contains_key_phrase(self, check_phrase):
         """ Checks if there is a key phrase in a check phrase and returns the key phrase if found. """
         for key_phrase in self.key_phrases:
-            if re.match(key_phrase, check_phrase):
+            if re.match(key_phrase, check_phrase, re.IGNORECASE):
                 return key_phrase
         return False
 
@@ -116,9 +116,9 @@ class InputDevice():
     def take_input(self):
         raise NotImplementedError
 
-    def make_device(device_type):
+    def make_device(device_type, energy_threshold=0):
         if device_type in (InputDeviceType.MICROPHONE, InputDeviceType.MICROPHONE.value):
-            return Microphone()
+            return Microphone(energy_threshold=energy_threshold)
         elif device_type in (InputDeviceType.CONSOLE, InputDeviceType.CONSOLE.value):
             return Console()
         else:
@@ -135,14 +135,17 @@ class Console(InputDevice):
 
 
 class Microphone(InputDevice):
-    def __init__(self):
+    def __init__(self, energy_threshold=0):
         self.voice_recogniser = sr.Recognizer()
 
         # Parts below can be removed and the voicecontroller will still work.
         # These are just an attempt at making the mic work better
         # Attempt to stop hanging.
-        self.voice_recogniser.dynamic_energy_threshold = False
-        self.energy_threshold = 400
+        if energy_threshold:
+            self.voice_recogniser.dynamic_energy_threshold = False
+            self.energy_threshold = energy_threshold
+        else:
+            self.voice_recogniser.dynamic_energy_threshold = True
 
         m = sr.Microphone()
         with m as source:
