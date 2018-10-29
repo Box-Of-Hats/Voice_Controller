@@ -1,13 +1,18 @@
 ## About
 
-Currently a work in progress and should not be treated as a final product. Project is undergoing constant changes and I plan to have a friendly GUI by the end of it that will make it much easier for people to use.
+A project which allows you to control your computer using voice commands.
 
 ## Dependacies
 
-Python Modules:
+### Python Modules:
 
     speech_recognition, winsound, gtts
 
-Programs: 
+### Programs: 
 
     ffmpeg
+    
+## TODO
+
+- Application GUI
+- GUI application to make config.json files easily
